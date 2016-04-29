@@ -1,0 +1,62 @@
+\documentclass[a4paper,11pt]{article}
+\usepackage[french,english]{babel} 
+\usepackage{microtype}
+
+\usepackage[utf8]{inputenc}
+\usepackage{array}
+\usepackage{amsmath} 
+\usepackage{amssymb}
+\usepackage{amsfonts}
+\usepackage{amsthm}
+\usepackage{fullpage}%
+\usepackage[T1]{fontenc}%
+
+\usepackage{graphicx}%
+\usepackage{url}%
+\usepackage{abstract}%
+
+\usepackage{mathpazo}%
+\parskip=0.5\baselineskip
+
+
+\title{Binary Decision Diagrams}
+\author{Rémi Hutin \& Joshua Peignier}
+\date{6 Mai 2016}
+
+
+\begin{document}
+\maketitle
+
+	
+	\section{BDD et forme normale if-then-else}
+
+		\paragraph{Question 1}
+		Soient $\phi$ une formule, $x$ une variable et $V$ une valuation.\newline
+		Remarquons que, par définition, $\phi\uparrow^{x} \equiv (x \wedge \phi[1/x]) \vee (\neg x \wedge \phi[0/x])$.
+		
+		Voici donc la table de vérité de $\phi\uparrow^{x}$ en fonction des valeurs de $x$ et de $\phi$ pour chaque valuation (on ne remplit que les cases nécessaires).\newline
+		
+		\begin{tabular}{|c|c|c|c|c|c|c|}
+		\hline
+		$x$ & $\phi$ & $\phi[1/x]$ &  $x \wedge \phi[1/x]$ & $\phi[0/x]$ & $\neg x \wedge \phi[0/x]$ & $\phi\uparrow^{x}$ \\
+		\hline
+		0 & 0 &   & 0 & 0 & 0 & 0 \\
+		\hline
+		0 & 1 &   & 0 & 1 & 1 & 1 \\
+		\hline
+		1 & 0 & 0 & 0 &   & 0 & 0 \\
+		\hline
+		1 & 1 & 1 & 1 &   & 0 & 1 \\
+		\hline
+		\end{tabular}
+		
+		Il suffit alors de remarquer que les colonnes de $\phi$ et $\phi\uparrow^{x}$ sont égales.
+		
+		\paragraph{Question 2}
+		On va procéder par récurrence sur le nombre de variables intervenant dans $\phi$. Notre hypothèse de récurrence est la propriété $P(n)$ : "toute formule de la logique propositionnelle contenant exactement $n$ variables est équivalente à une formule INF".
+	
+		Si $\phi$ ne contient qu'une unique variable $x$, alors on peut directement calculer les valeurs de $\phi[1/x]$ et de $\phi[0/x]$, et remplacer celles-ci par leurs valeurs respectives, $0$ ou $1$.
+		On peut alors utiliser la question précédente pour écrire que $\phi \equiv \phi\uparrow^{x} = x \rightarrow \phi[1/x],\phi[0/x]$.
+		
+		Si on se donne maintenant $n \in \mathbb{N}$ et qu'on suppose que toute formule à $n$ variables est équivalente à une formule INF, alors soit $\phi$ une formule à $n+1$ variables. Soit $x$ une des variables de $\phi$, choisie arbitrairement. Remarquons que $\phi[0/x]$ et $\phi[1/x]$ sont des formules à $n$ variables. On peut donc leur appliquer l'hypothèse de récurrence. Alors il existe des formules INF $\psi_0$ et $\psi_1$ telles que $\phi[0/x] \equiv \psi_0$ et $\phi[1/x] \equiv \psi_1$. Il suffit alors d'écrire que $\phi \equiv x \rightarrow \psi_1, \psi_0$. L'hypothèse de récurrence permet d'assurer que $\psi_1$ et $\psi_0$ ne sont écrites qu'à l'aide de formules INF et de constantes. La formule que nous venons de construire respecte aussi cette propriété. D'où on déduit l'hérédité.
+\end{document}
