@@ -54,10 +54,11 @@ let rec build t ht f =
     ;;
 
 
+
 (* Pretty-printer for formulas, to be used with compiled mode *)
 let print_formula fm = print_prop_formula fm; print_newline();;
 
-let f = << ( 1 <=> 2 ) /\ ( 3 <=> 4 )>>;;
+let f = << ( 1 \/ 2 ) /\ ( 1 \/ 3 ) /\ ( 2 \/ 3 )>>;;
 print_formula f;;
 
 let taille = 100 in
@@ -65,11 +66,18 @@ let taille = 100 in
 let t = init_t taille in
 let ht = init_ht taille in
 (* Adding a node for variable x_1, with low son 0 and high son 1 *)
+
+(*
 let u = make t ht 2 0 0 in
 
-  (* Adding a node for variable x_2, with low son 1 and high son u *)
   let v = make t ht 2 1 u in
     debug_print_t t;
     debug_print_h ht 10 10;
     print_t t v "bla.dot";;
+    *)
 
+    
+let u = build t ht f in 
+    debug_print_t t;
+    debug_print_h ht 10 10;
+    print_t t u "graph.dot";;

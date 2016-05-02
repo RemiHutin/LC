@@ -112,7 +112,7 @@ let print_t t u file =
   let c = open_out file
   in Printf.fprintf c "digraph bdd {\n"; 
     let _ = aux_print_t t [] u c in
-      Printf.fprintf c "}."; 
+      Printf.fprintf c "}"; 
       close_out c;;
 
 (* debug_print_t t; affiche la table t dans stdout *)

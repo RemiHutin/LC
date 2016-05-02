@@ -30,6 +30,10 @@ toplevel: init.ml
 bytecode:  main.ml 
 	ocamlc -pp "camlp5o lib/Quotexpander.cmo" $(INCLUDE) $(NUMS) $(TL) $(OFILES)  -o main main.ml
 
+	
+dot: graph.dot
+	dot -Tsvg graph.dot -o graph.svg
+
 
 # Clean up
 clean: 	
