@@ -27,16 +27,17 @@ let rec apply_neg t ht u =
     
 let rec apply t ht op u1 u2 = 
     match op, u1, u2 with
-    | Ou,    0, _ -> u2
-    | Ou,    1, _ -> one
-    | Et,    0, _ -> zero
-    | Et,    1, _ -> u2
-    | Impl,  0, _ -> one
-    | Impl,  1, _ -> u2
-    | Equiv, 0, _ -> apply_neg t ht u2
-    | Equiv, 1, _ -> u2
+    | Ou,    u1, _ when isZero u1 -> u2
+    | Ou,    u1, _ when isOne u1  -> one
+    | Et,    u1, _ when isZero u1 -> zero
+    | Et,    u1, _ when isOne u1  -> u2
+    | Impl,  u1, _ when isZero u1 -> one
+    | Impl,  u1, _ when isOne u1  -> u2
+    | Equiv, u1, _ when isZero u1 -> apply_neg t ht u2
+    | Equiv, u1, _ when isOne u1  -> u2
     | _, u1, u2 when var t u1 = var t u2  -> make t ht (var t u1) (apply t ht op (low t u1) (low t u2)) (apply t ht op (high t u1) (high t u2))
     | _, u1, u2 when var t u1 <> var t u2 -> make t ht (var t u1) (apply t ht op (low t u1) u2) (apply t ht op (high t u1) u2)
+    | _, _, _ -> zero
     ;;
 
 
@@ -50,7 +51,6 @@ let rec build t ht f =
     | Or (f1, f2) -> apply t ht Ou (build t ht f1) (build t ht f2)
     | Imp (f1, f2) -> apply t ht Impl (build t ht f1) (build t ht f2)
     | Iff (f1, f2) -> apply t ht Equiv (build t ht f1) (build t ht f2)
-    | _ -> zero
     ;;
 
 
