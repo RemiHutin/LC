@@ -35,9 +35,9 @@ let rec apply t ht op u1 u2 =
     | Impl,  u1, _ when isOne u1  -> u2
     | Equiv, u1, _ when isZero u1 -> apply_neg t ht u2
     | Equiv, u1, _ when isOne u1  -> u2
-    | _, u1, u2 when var t u1 = var t u2  -> make t ht (var t u1) (apply t ht op (low t u1) (low t u2)) (apply t ht op (high t u1) (high t u2))
-    | _, u1, u2 when var t u1 <> var t u2 -> make t ht (var t u1) (apply t ht op (low t u1) u2) (apply t ht op (high t u1) u2)
-    | _, _, _ -> zero
+    | _, u1, u2 when var t u1 = var t u2 -> make t ht (var t u1) (apply t ht op (low t u1) (low t u2)) (apply t ht op (high t u1) (high t u2))
+    | _, u1, u2 when var t u1 < var t u2 -> make t ht (var t u1) (apply t ht op (low t u1) u2) (apply t ht op (high t u1) u2)
+    | _, u1, u2                          -> make t ht (var t u2) (apply t ht op (low t u2) u1) (apply t ht op (high t u2) u1)
     ;;
 
 
@@ -53,7 +53,22 @@ let rec build t ht f =
     | Iff (f1, f2) -> apply t ht Equiv (build t ht f1) (build t ht f2)
     ;;
 
+    
+let sat t i = not (isZero i);;
+let valid t = isOne;;
 
+let anysat t i =
+    let rec aux i acc =
+        match i with
+        | i when isZero i -> []
+        | i when isOne i -> acc
+        | i -> let w = aux (low t i) (((var t i), false)::acc) in 
+               if w <> [] then w 
+               else aux (high t i) (((var t i), true)::acc);
+    in aux i [];;
+                
+                
+(*
 let sat t i = 
     let rec sat' i l = 
         let rec seen j l' =
@@ -122,7 +137,7 @@ let anysat t i =
                                     end
             end
 in anysat' i [];;
-
+*)
 
 
 
@@ -191,7 +206,7 @@ let rec print_board l n =
 (* Pretty-printer for formulas, to be used with compiled mode *)
 let print_formula fm = print_prop_formula fm; print_newline();;
 
-let f = << ( 1 /\ 2 ) <=> (0 /\ 4) >>;;
+let f = << ( 1 /\ 2 ) <=> (2 /\ 3) <=> (1 /\ 3) >>;;
 print_formula f;;
 
 (* initialization of tables*)
@@ -208,8 +223,8 @@ let u = make t ht 2 0 0 in
 
     
     
-(*
 
+(*
 let taille = 100 in
 let t = init_t taille in
 let ht = init_ht taille in
@@ -219,13 +234,9 @@ let u = build t ht f in
     print_t t u "graph.dot";
         
     if sat t u then print_list (anysat t u);
-    if valid t u then print_string "I'm legit, bitch";
-    print_int ((abs (2 - 10)) mod 8);;
-    
-    
-    let allowed i j n = (i = j) || 
-                      (((abs (i - j)) / n <> 0) && 
-                      ((abs (i - j)) mod n <> 0));;
+    if valid t u then print_string "I'm legit, bitch";;
+
+
 *)
 Random.self_init ();
 
@@ -236,4 +247,5 @@ let ht = init_ht taille in
 let u = queens t ht n in 
     print_string "solving";
     print_newline();
+    print_t t u "graph.dot";
     if sat t u then print_board (anysat t u) n;;
