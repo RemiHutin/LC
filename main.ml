@@ -141,7 +141,7 @@ in anysat' i [];;
 
 
 
-let queens t ht n =
+let dames n =
     let atom p =
         if 0 <= p && p < n*n then
             Atom (P p) 
@@ -156,24 +156,36 @@ let queens t ht n =
     i : current serie (row, col, diag...)
     j : pos in the serie
     *)
-    let rec cond f i j k opt =
-        match i, j, k with
-        | -1, _, _           -> True
-        | _, -2, _           -> False
-        | _, -1, _ when not opt -> False
-        | _, _, -1           -> True
-        | i, j, k when k = n -> And (cond f (i-1) (n-1) n opt, Or (cond f i (j-1) n opt, cond f i j (k-1) opt))
-        | i, j, k when k = j -> And (cond f i j (k-1) opt, f i k)
-        | i, j, k            -> And (cond f i j (k-1) opt, Not (f i k))
+    let cond f nb_series size_serie opt =
+        let rec series i = 
+            let rec serie j =
+                let rec serie_aux k =
+                    match k with
+                    | 0 -> True
+                    | k when k = j -> And (serie_aux (k-1), f (i-1) (k-1))
+                    | k            -> And (serie_aux (k-1), Not (f (i-1) (k-1)))
+                in
+                match j with
+                | -1 -> False
+                | 0 when not opt -> False
+                | j -> Or (serie (j-1), serie_aux size_serie)
+            in
+            match i with
+            | 0 -> True
+            | i -> And (series (i-1), serie size_serie)
+        in series nb_series
     in
-    
     print_string "building formula";
     print_newline();
-    let f = And (And (And (cond row (n-1) (n-1) n false, cond col (n-1) (n-1) n false), cond diag1 (2*n-2) (n-1) n true), cond diag2 (2*n-2) (n-1) n true) in
+    
+    let f = And (And (And (cond row n n false, cond col n n false), cond diag1 (2*n-1) n true), cond diag2 (2*n-1) n true) in
+    
     print_string "building BDD";
     print_newline();
-    build t ht f;;
+    f;;
         
+    
+    
         
 
     
@@ -241,10 +253,10 @@ let u = build t ht f in
 Random.self_init ();
 
 let taille = 100 in
-let n = 4 in
+let n = 10 in
 let t = init_t taille in
 let ht = init_ht taille in
-let u = queens t ht n in 
+let u = build t ht (dames n) in 
     print_string "solving";
     print_newline();
     print_t t u "graph.dot";
