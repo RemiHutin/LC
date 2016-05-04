@@ -18,37 +18,53 @@ let make t ht i l h =
     ;;
     
     
-let rec apply_neg t ht u = 
-    match u with
-    | u when isZero u -> one
-    | u when isOne u -> zero
-    | u -> make t ht (var t u) (apply_neg t ht (low t u)) (apply_neg t ht (high t u));;
+let apply_neg t ht u = 
+    let tab = Hashtbl.create 100 in
+    let rec aux u =
+        try 
+            let r = Hashtbl.find tab u in
+            print_string "Goog";
+            print_newline();
+            r;
+        with
+        Not_found ->
+            let r =
+            match u with
+            | u when isZero u -> one
+            | u when isOne u -> zero
+            | u ->  make t ht (var t u) (aux (low t u)) (aux (high t u))
+            in
+            Hashtbl.add tab u r; r
+        
+    in aux u;;
     
     
 let rec apply t ht op u1 u2 = 
-    match op, u1, u2 with
-    | Ou,    u1, _ when isZero u1 -> u2
-    | Ou,    u1, _ when isOne u1  -> one
-    | Et,    u1, _ when isZero u1 -> zero
-    | Et,    u1, _ when isOne u1  -> u2
-    | Impl,  u1, _ when isZero u1 -> one
-    | Impl,  u1, _ when isOne u1  -> u2
-    | Equiv, u1, _ when isZero u1 -> apply_neg t ht u2
-    | Equiv, u1, _ when isOne u1  -> u2
-    | _, u1, u2 when var t u1 = var t u2 -> make t ht (var t u1) (apply t ht op (low t u1) (low t u2)) (apply t ht op (high t u1) (high t u2))
-    | _, u1, u2 when var t u1 < var t u2 -> make t ht (var t u1) (apply t ht op (low t u1) u2) (apply t ht op (high t u1) u2)
-    | _, u1, u2                          -> make t ht (var t u2) (apply t ht op (low t u2) u1) (apply t ht op (high t u2) u1)
-    ;;
+    let rec aux op u1 u2 =
+        match op, u1, u2 with
+        | Ou,    u1, _ when isZero u1 -> u2
+        | Ou,    u1, _ when isOne u1  -> one
+        | Et,    u1, _ when isZero u1 -> zero
+        | Et,    u1, _ when isOne u1  -> u2
+        | Impl,  u1, _ when isZero u1 -> one
+        | Impl,  u1, _ when isOne u1  -> u2
+        | Equiv, u1, _ when isZero u1 -> apply_neg t ht u2
+        | Equiv, u1, _ when isOne u1  -> u2
+        | _, u1, u2 when var t u1 = var t u2 -> make t ht (var t u1) (aux op (low t u1) (low t u2)) (aux op (high t u1) (high t u2))
+        | _, u1, u2 when var t u1 < var t u2 -> make t ht (var t u1) (aux op (low t u1) u2) (aux op (high t u1) u2)
+        | _, u1, u2                          -> make t ht (var t u2) (aux op (low t u2) u1) (aux op (high t u2) u1)
+    in
+    aux op u1 u2;;
 
 
 let rec build t ht f =
     match f with
-    | False -> zero
-    | True -> one
-    | Atom (P x) -> make t ht x zero one
-    | Not f1 -> apply_neg t ht (build t ht f1)
+    | False        -> zero
+    | True         -> one
+    | Atom (P x)   -> make t ht x zero one
+    | Not f1       -> apply_neg t ht (build t ht f1)
     | And (f1, f2) -> apply t ht Et (build t ht f1) (build t ht f2)
-    | Or (f1, f2) -> apply t ht Ou (build t ht f1) (build t ht f2)
+    | Or  (f1, f2) -> apply t ht Ou (build t ht f1) (build t ht f2)
     | Imp (f1, f2) -> apply t ht Impl (build t ht f1) (build t ht f2)
     | Iff (f1, f2) -> apply t ht Equiv (build t ht f1) (build t ht f2)
     ;;
@@ -68,94 +84,15 @@ let anysat t i =
     in aux i [];;
                 
                 
-(*
-let sat t i = 
-    let rec sat' i l = 
-        let rec seen j l' =
-            match l' with
-            | [] -> (false, false)
-            | (x, b)::_ when x = j -> (true, b)
-            | _::q -> seen j q
-        in
-        match i with
-        | i when isZero i -> false
-        | i when isOne i -> true
-        | i -> let r = seen (var t i) l in 
-            begin match r with
-                | (true, true) -> sat' (high t i) l
-                | (true, false) -> sat' (low t i) l
-                | (false, _) -> sat' (low t i) ((i, false)::l) || 
-                                sat' (high t i) ((i, true)::l)
-            end
-in sat' i [];;
-
-let valid t i =
-    let rec valid' i l = 
-        let rec seen j l' =
-            match l' with
-            | [] -> (false, false)
-            | (x, b)::_ when x = j -> (true, b)
-            | _::q -> seen j q
-        in
-        match i with
-        | i when isZero i -> true
-        | i when isOne i -> false
-        | i -> let r = seen (var t i) l in 
-            begin match r with
-                | (true, true) -> valid' (high t i) l
-                | (true, false) -> valid' (low t i) l
-                | (false, _) -> valid' (low t i) ((i, false)::l) || 
-                                valid' (high t i) ((i, true)::l)
-            end
-in not (valid' i []);;
-
-
-let anysat t i = 
-    let rec anysat' i l = 
-        let rec seen j l' =
-            match l' with
-            | [] -> (false, false)
-            | (x, b)::_ when x = j -> (true, b)
-            | _::q -> seen j q
-        in
-        match i with
-        | i when isZero i -> []
-        | i when isOne i -> l
-        | i -> let r = seen (var t i) l in 
-            begin match r with
-                | (true, true) -> anysat' (high t i) l
-                | (true, false) -> anysat' (low t i) l
-                | (false, _) -> if Random.int 2 = 1 then 
-                                    begin
-                                    let w = anysat' (low t i) (((var t i), false)::l) in if w <> [] then w else 
-                                    anysat' (high t i) (((var t i), true)::l)
-                                    end
-                                else
-                                    begin
-                                    let w = anysat' (high t i) (((var t i), true)::l) in if w <> [] then w else 
-                                    anysat' (low t i) (((var t i), false)::l)
-                                    end
-            end
-in anysat' i [];;
-*)
 
 
 
 let dames n =
-    let atom p =
-        if 0 <= p && p < n*n then
-            Atom (P p) 
-        else
-            False
-    in
-    let row i k = atom (i*n + k) in
-    let col i k = atom (k*n + i) in
-    let diag1 i k = if i+k >= n-1 && i+k < 2*n-1 then atom (k*(n+1) + i - (n-1)) else False in
-    let diag2 i k = if i-k >= 0 && i-k < n then atom (k*(n-1) + i) else False in
-    (*
-    i : current serie (row, col, diag...)
-    j : pos in the serie
-    *)
+    let row i k = Atom (P (i*n + k)) in
+    let col i k = Atom (P (k*n + i)) in
+    let diag1 i k = if i+k >= n-1 && i+k < 2*n-1 then Atom (P (k*(n+1) + i - (n-1))) else False in
+    let diag2 i k = if i-k >= 0 && i-k < n then Atom (P (k*(n-1) + i)) else False in
+    
     let cond f nb_series size_serie opt =
         let rec series i = 
             let rec serie j =
@@ -253,7 +190,7 @@ let u = build t ht f in
 Random.self_init ();
 
 let taille = 100 in
-let n = 10 in
+let n = 6 in
 let t = init_t taille in
 let ht = init_ht taille in
 let u = build t ht (dames n) in 
