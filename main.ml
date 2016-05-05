@@ -137,20 +137,55 @@ let rec print_list l =
                     print_newline(); 
                     print_list q;;
 
-let rec print_board l n =
-    let a = Array.make (n*n) false
+                    
+let board_of_list l n =
+    let board = Array.make (n*n) false
     in
     let rec fill l =
         match l with
         | [] -> ()
-        | (p, b)::t -> a.(p)<-b; fill t;
+        | (p, b)::t -> board.(p)<-b; fill t;
     in
     fill l;
+    board;;
+                    
+let print_board board n =
     for i=0 to (n*n-1) do
         if (i mod n = 0) then print_newline();
-        print_char (if a.(i) then '#' else '.');
+        print_char (if board.(i) then '#' else '.');
     done;
     print_newline();;
+    
+(* https://commons.wikimedia.org/wiki/Category:SVG_chess_pieces *)
+let svg_of_board board n filename =
+    let f = open_out filename in
+    output_string f ("<?xml version='1.0' encoding='utf-8'?>
+    <svg xmlns='http://www.w3.org/2000/svg' version='1.1' width='" ^ (string_of_int (n*45)) ^ "' height='" ^ (string_of_int (n*45)) ^ "'>");
+    for i=0 to (n-1) do
+        for j=0 to (n-1) do
+            output_string f ("<g transform='translate(" ^ (string_of_int (i*45)) ^ "," ^ (string_of_int (j*45)) ^ ")'>");
+            if ((i+j) mod 2) = 0 then
+                output_string f "<rect x='0' y='0' width='45' height='45' style='fill:#ffce9e; stroke:none;'/>"
+            else
+                output_string f "<rect x='0' y='0' width='45' height='45' style='fill:#d18b47; stroke:none;'/>";
+            if board.(i + j*n) then
+                output_string f "<g style='opacity:1; fill:#ffffff; fill-opacity:1; fill-rule:evenodd; stroke:#000000; stroke-width:1.5; stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4; stroke-dasharray:none; stroke-opacity:1;'>
+                <path d='M 9 13 A 2 2 0 1 1  5,13 A 2 2 0 1 1  9 13 z' transform='translate(-1,-1)' />
+                <path d='M 9 13 A 2 2 0 1 1  5,13 A 2 2 0 1 1  9 13 z' transform='translate(15.5,-5.5)' />
+                <path d='M 9 13 A 2 2 0 1 1  5,13 A 2 2 0 1 1  9 13 z' transform='translate(32,-1)' />
+                <path d='M 9 13 A 2 2 0 1 1  5,13 A 2 2 0 1 1  9 13 z' transform='translate(7,-4.5)' />
+                <path d='M 9 13 A 2 2 0 1 1  5,13 A 2 2 0 1 1  9 13 z' transform='translate(24,-4)' />
+                <path d='M 9,26 C 17.5,24.5 30,24.5 36,26 L 38,14 L 31,25 L 31,11 L 25.5,24.5 L 22.5,9.5 L 19.5,24.5 L 14,10.5 L 14,25 L 7,14 L 9,26 z ' style='stroke-linecap:butt;' />
+                <path d='M 9,26 C 9,28 10.5,28 11.5,30 C 12.5,31.5 12.5,31 12,33.5 C 10.5,34.5 10.5,36 10.5,36 C 9,37.5 11,38.5 11,38.5 C 17.5,39.5 27.5,39.5 34,38.5 C 34,38.5 35.5,37.5 34,36 C 34,36 34.5,34.5 33,33.5 C 32.5,31 32.5,31.5 33.5,30 C 34.5,28 36,28 36,26 C 27.5,24.5 17.5,24.5 9,26 z ' style='stroke-linecap:butt;' />
+                <path d='M 11.5,30 C 15,29 30,29 33.5,30' style='fill:none;' />
+                <path d='M 12,33.5 C 18,32.5 27,32.5 33,33.5' style='fill:none;' />
+            </g>";
+            output_string f "</g>";
+        done
+    done;
+    output_string f "</svg>";
+    close_out f;
+    ;;
     
 (* Pretty-printer for formulas, to be used with compiled mode *)
 let print_formula fm = print_prop_formula fm; print_newline();;
@@ -158,43 +193,22 @@ let print_formula fm = print_prop_formula fm; print_newline();;
 let f = << ( 1 /\ 2 ) <=> (2 /\ 3) <=> (1 /\ 3) >>;;
 print_formula f;;
 
-(* initialization of tables*)
-(* Adding a node for variable x_1, with low son 0 and high son 1 *)
-
-(*
-let u = make t ht 2 0 0 in
-
-  let v = make t ht 2 1 u in
-    debug_print_t t;
-    debug_print_h ht 10 10;
-    print_t t v "bla.dot";;
-    *)
-
-    
-    
-
-(*
-let taille = 100 in
-let t = init_t taille in
-let ht = init_ht taille in
-let u = build t ht f in 
-    debug_print_t t;
-    debug_print_h ht 10 10;
-    print_t t u "graph.dot";
-        
-    if sat t u then print_list (anysat t u);
-    if valid t u then print_string "I'm legit, bitch";;
 
 
-*)
+
 Random.self_init ();
 
 let taille = 100 in
-let n = 6 in
+let n = 8 in
 let t = init_t taille in
 let ht = init_ht taille in
-let u = build t ht (dames n) in 
+let f = (dames n) in
+let buildt = build t ht in
+let u = time buildt f in 
     print_string "solving";
     print_newline();
     print_t t u "graph.dot";
-    if sat t u then print_board (anysat t u) n;;
+    let sol = anysat t u in
+    let board = board_of_list sol n in
+    print_board board n;
+    svg_of_board board n "board3.svg";;
