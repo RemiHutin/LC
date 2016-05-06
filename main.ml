@@ -55,7 +55,7 @@ let apply_neg t ht u =
 (* apply : tableT -> tableH -> op -> id -> id -> id 
  *
  * This function applies a logical operation to 2 BDD and
- * returns a new BBD.
+ * returns a new BDD.
  * Dynamic programming with hash table is used to
  * improve performances.
  *) 

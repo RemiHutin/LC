@@ -28,13 +28,16 @@
 \maketitle
 
 	\section{Introduction}
-	
+	Ce document traite la version informatique du sujet proposé, et présente donc des réponses détaillées aux question 1 à 3, ainsi que les points intéressants et résultats de la partie qui concerne le code.\newline
+	Pour compiler et exécuter notre code, extrayez le contenu de l'archive fournie dans un répertoire de votre choix. Rendez-vous dans ce répertoire à l'aide d'un terminal, puis compilez avec \texttt{make}, et exécutez avec \texttt{./main}. Notre code, en plus des fonctions demandées dans le sujet, présente un exemple de la résolution du problèmes des $n$ dames pour $n = 12$.\newline
 	\emph{Remarque préliminaire} : Dans tout ce document, on admettra l'existence d'une bijection entre l'ensemble des formules INF et l'ensemble des BDD.
 	 
 	\section{BDD et forme normale if-then-else}
 
 		\paragraph{Question 1}
+
 		Soient $\varphi$ une formule, $x$ une variable et $V$ une valuation.\newline
+On veut montrer que $\varphi \equiv\varphi\uparrow^{x}$.\newline
 		Remarquons que, par définition, $\varphi\uparrow^{x} \equiv (x \wedge \varphi[1/x]) \vee (\neg x \wedge \varphi[0/x])$.
 		
 		Voici donc la table de vérité de $\varphi\uparrow^{x}$ en fonction des valeurs de $x$ et de $\varphi$ pour chaque valuation (on ne remplit que les cases nécessaires).\newline
@@ -68,17 +71,17 @@
 		(Suivant la remarque préliminaire établie en introduction, on confondra les formules INF et leurs BDD associés.)
 		
 		\emph{Remarque} :  Dans cette démonstration, lorsqu'on traitera le cas des connecteurs binaires, on sera amené à remplacer des feuilles d'une formule INF ${f'}_1$ par une deuxième formule INF ${f'}_2$ (le tout pour former une formule INF $\varphi'$).
-		Notons que nous devons toutefois procéder à des simplifications : si ${f'}_2$ contient une formule INF $F = x \rightarrow F_1,F_0$, et que $x$ est également présente dans ${f'}_1$, alors dans le diagramme de $\varphi'$, il faut s'assurer qu'on ne teste pas $x$ deux fois sur le même chemin. Donc dans une branche qui se trouve sur le fils faible de $x$ dans ${f'}_1$, si un noeud $x$ réapparaît plus loin, on supprime ce deuxième noeud $x$ ainsi que son fils fort $F_1$, et on le remplace par son fils faible $F_0$ (et symétriquement si on est sur une branche sur le fils fort de $x$ dans ${f'}_1$). On sous-entendra ces suppressions de noeuds par la suite.
+		Notons que nous devons toutefois procéder à des simplifications : si ${f'}_2$ contient une formule INF $F = x \rightarrow F_1,F_0$, et que $x$ est également présente dans ${f'}_1$, alors dans le diagramme de $\varphi'$, il faut s'assurer qu'on ne teste pas $x$ deux fois sur le même chemin. Donc dans une branche qui se trouve sur le fils faible de $x$ dans ${f'}_1$, si un noeud $x$ réapparaît plus loin, on supprime ce deuxième noeud $x$ ainsi que son fils fort $F_1$, et on le remplace par son fils faible $F_0$ (et symétriquement si on est sur une branche sur le fils fort de $x$ dans ${f'}_1$). On sous-entendra ces suppressions de noeuds par la suite, mais elles sont nécessaires pour la construction de la formule INF.
 		
 		\begin{itemize}
 		\item Si notre formule $\varphi$ est réduite à une variable $x$, sans utilisation d'opérateurs, alors $\varphi$ est équivalente à la formule INF $x \rightarrow 1,0$.
 		\item Si la formule $\varphi$ s'écrit $\neg f$ et qu'on suppose que $f$ est équivalente à une formule INF $f'$, alors $\varphi$ est équivalente à la formule INF $\varphi'$ obtenue en transformant, dans le BDD correspondant à $f'$, les feuilles $0$ en $1$ et les feuilles $1$ en $0$. Ainsi, $\varphi$ est vraie si et seulement si $f$ est fausse, si et seulement si $f'$ est fausse, si et seulement si $\varphi'$ est vraie. 
 		\item Si $\varphi$ s'écrit $f_1 \wedge f_2$ et qu'on suppose que $f_1$ et $f_2$ sont toutes les deux équivalentes à des formules INF ${f'}_1$ et ${f'}_2$, alors on peut construire une formule INF $\varphi'$ équivalente à $\varphi$ à partir de ${f'}_1$ ; il suffit, dans le BDD correspondant à ${f'}_1$, de remplacer les feuilles $1$ par le BDD complet de ${f'}_2$.
 		
-		Ainsi, si on parcourt $\varphi'$ avec une valuation telle que ${f'}_1$ soit fausse, on tombe sur $0$, donc $\varphi'$ est fausse. Et si on la parcourt avec une valuation qui rende ${f'}_1$ vraie, alors $\varphi'$ a la même valeur que ${f'}_2$. Donc $\varphi'$ est vraie si et seulement si ${f'}_1$ et ${f'}_2$ sont vraies. Donc $\varphi'$ est bien équivalente à $\varphi$.
+		Ainsi, si on parcourt $\varphi'$ avec une valuation telle que ${f'}_1$ soit fausse, on tombe sur $0$, donc $\varphi'$ est fausse. Et si on la parcourt avec une valuation qui rende ${f'}_1$ vraie, alors on arrive sur la racine de ${f'}_2$, et on continue les tests, donc $\varphi'$ a la même valeur que ${f'}_2$. Donc $\varphi'$ est vraie si et seulement si ${f'}_1$ et ${f'}_2$ sont vraies. Donc $\varphi'$ est bien équivalente à $\varphi$.
 		\item Si $\varphi$ s'écrit $f_1 \vee f_2$ et qu'on suppose que $f_1$ et $f_2$ sont toutes les deux équivalentes à des formules INF ${f'}_1$ et ${f'}_2$, on procède de la même manière qu'avant en construisant une formule $\varphi'$ à partir de ${f'}_1$, mais cette fois, on remplace ses feuilles $0$ par la formule INF de ${f'}_2$.
 		
-		Ainsi, si on choisit une valuation qui rende ${f'}_1$ est vraie, le parcours dans $\varphi'$ avec cette valuation nous amène à un noeud 1, donc est $\varphi'$ est vraie. Sinon, $\varphi'$ a la valeur de ${f'}_2$. Donc $\varphi'$ est vraie si et seulement si au moins l'une des deux formules entre ${f'}_1$ et ${f'}_2$ est vraie.
+		Ainsi, si on choisit une valuation qui rende ${f'}_1$ est vraie, le parcours dans $\varphi'$ avec cette valuation nous amène à un noeud 1, donc est $\varphi'$ est vraie. Sinon, on arrive sur la racine de ${f'}_2$ et on teste cette dernière ; alors $\varphi'$ a la valeur de ${f'}_2$. Donc $\varphi'$ est vraie si et seulement si au moins l'une des deux formules entre ${f'}_1$ et ${f'}_2$ est vraie.
 		Donc $\varphi'$ est équivalente à $\varphi$.
 		\item Si $\varphi$ s'écrit $f_1 \Rightarrow f_2$ et qu'on suppose que $f_1$ et $f_2$ sont toutes les deux équivalentes à des formules INF ${f'}_1$ et ${f'}_2$, on procède de la même manière qu'avant en construisant une formule $\varphi'$ à partir de ${f'}_1$ ; mais cette fois, on change les feuilles $0$ de ${f'}_1$ en $1$, et on remplace ses feuilles $1$ par ${f'}_2$.
 		
@@ -86,6 +89,8 @@
 		\item Si $\varphi$ s'écrit $f_1 \Leftrightarrow f_2$ et qu'on suppose que $f_1$ et $f_2$ sont toutes les deux équivalentes à des formules INF ${f'}_1$ et ${f'}_2$, on procède de la même manière qu'avant en construisant une formule $\varphi'$ à partir de ${f'}_1$ : on remplace les feuilles $1$ de ${f'}_1$ par la formule ${f'}_2$, et on remplace les feuilles $0$ de ${f'}_1$ par la formule ${f'}_2$ en prenant soin d'échanger les valeurs $1$ et $0$ sur les feuilles de cette dernière.
 		On peut ainsi vérifier que $\varphi'$ est équivalente à $\varphi$.
  		\end{itemize}
+
+On en conclut que toute formule est équivalente à une formule INF.
 	
 		\paragraph{Question 3} On peut procéder par récurrence sur $n$.
 		Soit donc la propriété $P(n)$ : "pour un ordre sur les variables $x_1 < ... < x_n$ donné, pour toute fonction booléenne $f : \mathbb{B}^n \rightarrow \mathbb{B}$, il existe un unique ROBDD $u$ tel que $f^u = f$."
@@ -94,20 +99,24 @@
 		\item Montrons $P(1)$ : \newline
 		Si $f$ ne prend qu'une variable $x$, alors deux cas se présentent :
 			\begin{itemize} 
-			\item si $f(1) = f(0)$, alors le ROBDD ne contenant que le noeud de la constante $f(0)$ convient, et il n'existe pas d'autres ROBDD correspondant, puisqu'en respectant la propriété d'utilité, il n'y a aucun test à faire, donc le diagramme est nécessairement réduit à un seul noeud, qui ne peut avoir que la valeur de $f(0)$ \item $si f(1) \neq f(0)$, il suffit de construire le ROBDD correspondant à la formule INF $x \rightarrow f(1),f(0)$. L'unicité découle du fait qu'un seul test est nécessaire et qu'il ne peut pas avoir d'autres résultats.
+			\item si $f(1) = f(0)$ (donc si $f$ est constante), alors le BDD réduit au noeud $f(0)$ convient pour décrire $f$. Ce BDD est ordonné (notons que tout BDD où on ne fait des tests que sur au plus une variable est ordonné) et réduit, car il respecte de manière évidente les principes d'unicité et d'utilité. C'est donc un ROBDD, donc il en existe au moins un. Et celui-ci est l'unique ROBDD qui permet de représenter $f$ pour cet ordre. En effet, tout autre BDD convenant doit soit être composé d'un unique noeud $f(0)$ (on retrouve donc le ROBDD précédemment mentionné), soit avoir une autre racine, qui est forcément $x$, puisque c'est la seule variable à tester. Mais comme tous les tests aboutissent à une unique valeur, le principe d'unicité permet de réduire ce diagramme au ROBDD précédemment mentionné. On a donc l'unicité du ROBDD correspondant.
+ \item $si f(1) \neq f(0)$ (donc si $f$ peut prendre deux valeurs différentes), il suffit de construire le BDD correspondant à la formule INF $x \rightarrow f(1),f(0)$. Il est ordonné, et il est réduit, car il respecte les principe d'unicité et d'utilité. L'unicité de ce ROBDD pour la propriété $P(1)$ découle du fait qu'un seul test est nécessaire. Un ROBDD qui convient doit avoir $x$ pour racine ; mais aucun autre noeud ne peut être étiqueté par $x$, car un tel noeud serait accessible depuis la racine $x$, et $x$ serait donc testé plusieurs fois sur certains chemins. On doit donc obligatoirement mettre des valeurs constantes comme fils fort et faible de la racine, et il n'y a qu'une possibilité pour la fonction $f$ donnée. On a donc l'existence et l'unicité du ROBDD correspondant.
 			\end{itemize}
 		\item Supposons $P(n)$ pour $n$ donné, et montrons $P(n+1)$ :
 		On se donne $n+1$ variables $x_1$ à $x_{n+1}$ et l'ordre $x_1 < ... < x_{n+1}$.
 		Soit $f$ une fonction booléenne à $n+1$ variables, notées $b_1$ à $b_{n+1}$. On considère les fonctions booléennes à $n$ variables $f_0$ et $f_1$ telles que $f_0(b_2,...,b_{n+1}) = f(0,b_2,...,b_{n+1})$ et $f_1(b_2,...,b_{n+1}) = f(1,b_2,...,b_{n+1})$.
 		
 		$f_0$ et $f_1$ sont des fonctions booléennes à $n$ variables, et  les variables $x_2$ à $x_{n+1}$ suivent l'ordre $x_2 < ... < _ x{n+1}$. Donc d'après $P(n)$, il existe un unique ROBDD $u_0$ tel que $f^{u_0} = f_0$, et de même il existe un unique ROBDD $u_1$ tel que $f^{u_1} = f$.
-		On peut donc construire un BDD pour $f$ en prenant $x_1$ pour racine, et en lui donnant pour fils faible la racine de $u_0$ et pour fils fort la racine de $u_1$. On peut vérifier avec les définitions de $f_0$ et $f_1$ que le BDD $u$ ainsi construit est tel que $f^u = f$. De plus, l'ordre donné sur les variables $x_1$ à $_{n+1}$ est respecté dans $u$, car il a pour racine $x_1$ et que chacun de ses fils est ordonné suivant $x_2 < ... < x_{n+1}$. On a donc un $OBDD$, qu'on peut réduire en fusionnant tous les noeuds qui auraient la même étiquette, le même fils fort et le même fils faible, et en supprimant les noeuds dont les deux fils sont égaux, et en supprimant tous les test inutiles (ceux-ci sont déjà a priori supprimés dans les ROBDD $u_0$ et $u_1$ ; il faudrait donc seulement supprimer la racine $x_1$ si son test est inutile). On a donc construit un $ROBDD$. L'unicité de celui-ci est imposée par l'ordre qu'on s'est donné : un tel $ROBDD$ doit forcément avoir $x_1$ pour racine ; et comme fils fort et fils faible, il doit avoir deux autres ROBDD associés respectivement à $f_1$ et $f_0$. Mais ceux-ci sont uniques, d'après la propriété $P(n)$. Il ne peut donc pas en exister d'autre non plus pour $f$. On a donc démontré $P(n+1)$.
+		On peut donc construire un BDD pour $f$ en prenant $x_1$ pour racine, et en lui donnant pour fils faible la racine de $u_0$ et pour fils fort la racine de $u_1$. On peut vérifier avec les définitions de $f_0$ et $f_1$ que le BDD $u$ ainsi construit est tel que $f^u = f$. De plus, l'ordre donné sur les variables $x_1$ à $_{n+1}$ est respecté dans $u$, car il a pour racine $x_1$ et que chacun de ses fils est ordonné suivant $x_2 < ... < x_{n+1}$. On a donc un $OBDD$, qu'on peut réduire en fusionnant tous les noeuds qui auraient la même étiquette, le même fils fort et le même fils faible, et en supprimant tous les test inutiles (ceux-ci sont déjà a priori supprimés dans les ROBDD $u_0$ et $u_1$ ; il faudrait donc seulement supprimer la racine $x_1$ si son test est inutile). On a donc construit un ROBDD. 
+
+L'unicité de celui-ci est imposée par l'ordre qu'on s'est donné. Si le test de $x_1$ est inutile, on est ramené au cas de $P(n)$, qui est notre hypothèse, et qui assure l'existence et l'unicité du ROBDD construit. Sinon, un tel $ROBDD$ doit forcément avoir $x_1$ pour racine ; et comme fils fort et fils faible, il doit avoir deux autres ROBDD associés respectivement à $f_1$ et $f_0$. Mais ceux-ci sont uniques, d'après la propriété $P(n)$. Il ne peut donc pas en exister d'autre non plus pour $f$. On a donc démontré $P(n+1)$.
 		\end{itemize}
 		
+On en conclut que pour tout $n$, pour un ordre sur les variables $x_1 < ... < x_n$ donné, pour toute fonction booléenne $f : \mathbb{B}^n \rightarrow \mathbb{B}$, il existe un unique ROBDD $u$ tel que $f^u = f$.
 		
 	\section{Implémentation de ROBDD}
 	
-	Nous avons réussi à implémenter l'ensemble de fonctions demandées, en particulier l'extension des $n$ dames et les résultats que nous obtenons semblent cohérents.
+	Nous avons réussi à implémenter l'ensemble des fonctions demandées, en particulier l'extension des $n$ dames ; les résultats que nous obtenons semblent cohérents.
 	
 	Pour le problème des $n$ dames, nous avons créé la fonction \texttt{dames : int -> prop formula}, qui génère la formule modélisant le problème pour une taille donnée. L'idée intuitive pour modéliser le problème est qu'il doit y avoir exactement $1$ dame présente dans chaque ligne et chaque colonne de l'échiquier, et qu'il doit y avoir au plus $1$ dame présente dans chaque diagonale. 
 	
@@ -132,7 +141,7 @@
         
         $$(x_0 \land \neg x_1 \land \neg x_2 \land \neg x_3) \lor (\neg x_0 \land x_1 \land \neg x_2 \land \neg x_3) \lor (\neg x_0 \land \neg x_1 \land x_2 \land \neg x_3) \lor (\neg x_0 \land \neg x_1 \land \neg x_2 \land x_3)$$
         
-        Ainsi de suite pour toutes les lignes, colonnes et diagonales. Cette formule est ensuite traduite en ROBDD par la fonction \texttt{build}, et une solution est trouvée par la fonction \texttt{anysat}.
+        On réitère ce procédé pour toutes les lignes, colonnes et diagonales, et on construit une formule globale obtenue par la conjonction de toutes les formules ainsi obtenues. Cette formule est ensuite traduite en ROBDD par la fonction \texttt{build}, et une solution est trouvée par la fonction \texttt{anysat}.
 	
 	Dans un premier temps, nous avons implémenté les fonctions sans utiliser la programmation dynamique. Les résultats étaients corrects, mais les performances
 	étaient assez faibles (nous n'avons pu résoudre le problème des $n$ dames que pour $n \leq 6$).
