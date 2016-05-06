@@ -115,7 +115,7 @@ Nous pouvons en conclure que pour tout $n$, pour un ordre sur les variables $x_1
 	
 	Pour le problème des $n$ dames, nous avons créé la fonction \texttt{dames : int -> prop formula}, qui génère la formule modélisant le problème pour une taille donnée. L'idée intuitive pour modéliser le problème est qu'il doit y avoir exactement $1$ dame présente dans chaque ligne et chaque colonne de l'échiquier, et qu'il doit y avoir au plus $1$ dame présente dans chaque diagonale. 
 	
-	Notre fonction traduit donc cette idée en formule logique. On commence donc par associer à chaque case une variable logique. Par exemple, nous $n = 4$ :
+	Notre fonction traduit donc cette idée en formule logique. On commence donc par associer à chaque case une variable logique. Par exemple, pour $n = 4$ :
 	
 	\begin{center}
 	\begin{tabular}{|*{4}{c|}}
