@@ -27,7 +27,10 @@
 \begin{document}
 \maketitle
 
+	\section{Introduction}
 	
+	\emph{Remarque préliminaire} : Dans tout ce document, on admettra l'existence d'une bijection entre l'ensemble des formules INF et l'ensemble des BDD.
+	 
 	\section{BDD et forme normale if-then-else}
 
 		\paragraph{Question 1}
@@ -53,13 +56,37 @@
 		Il suffit alors de remarquer que les colonnes de $\varphi$ et $\varphi\uparrow^{x}$ sont égales.
 		
 		\paragraph{Question 2}
-		On va procéder par récurrence sur le nombre de variables intervenant dans $\varphi$. Notre hypothèse de récurrence est la propriété $P(n)$ : "toute formule de la logique propositionnelle contenant exactement $n$ variables est équivalente à une formule INF".
+		%On va procéder par récurrence sur le nombre de variables intervenant dans $\varphi$. Notre hypothèse de récurrence est la propriété $P(n)$ : "toute formule de la logique propositionnelle contenant exactement $n$ variables est équivalente à une formule INF".
 	
-		Si $\varphi$ ne contient qu'une unique variable $x$, alors on peut directement calculer les valeurs de $\varphi[1/x]$ et de $\varphi[0/x]$, et remplacer celles-ci par leurs valeurs respectives, $0$ ou $1$.
-		On peut alors utiliser la question précédente pour écrire que $\varphi \equiv \varphi\uparrow^{x} = x \rightarrow \varphi[1/x],\varphi[0/x]$.
+		%Si $\varphi$ ne contient qu'une unique variable $x$, alors on peut directement calculer les valeurs de $\varphi[1/x]$ et de $\varphi[0/x]$, et remplacer celles-ci par leurs valeurs respectives, $0$ ou $1$.
+		%On peut alors utiliser la question précédente pour écrire que $\varphi \equiv \varphi\uparrow^{x} = x \rightarrow \varphi[1/x],\varphi[0/x]$.
 		
-		Si on se donne maintenant $n \in \mathbb{N}$ et qu'on suppose que toute formule à $n$ variables est équivalente à une formule INF, alors soit $\varphi$ une formule à $n+1$ variables. Soit $x$ une des variables de $\varphi$, choisie arbitrairement. Remarquons que $\varphi[0/x]$ et $\varphi[1/x]$ sont des formules à $n$ variables. On peut donc leur appliquer l'hypothèse de récurrence. Alors il existe des formules INF $\psi_0$ et $\psi_1$ telles que $\varphi[0/x] \equiv \psi_0$ et $\varphi[1/x] \equiv \psi_1$. Il suffit alors d'écrire que $\varphi \equiv x \rightarrow \psi_1, \psi_0$. L'hypothèse de récurrence permet d'assurer que $\psi_1$ et $\psi_0$ ne sont écrites qu'à l'aide de formules INF et de constantes. La formule que nous venons de construire respecte aussi cette propriété. D'où on déduit l'hérédité.
+		%Si on se donne maintenant $n \in \mathbb{N}$ et qu'on suppose que toute formule à $n$ variables est équivalente à une formule INF, alors soit $\varphi$ une formule à $n+1$ variables. Soit $x$ une des variables de $\varphi$, choisie arbitrairement. Remarquons que $\varphi[0/x]$ et $\varphi[1/x]$ sont des formules à $n$ variables. On peut donc leur appliquer l'hypothèse de récurrence. Alors il existe des formules INF $\psi_0$ et $\psi_1$ telles que $\varphi[0/x] \equiv \psi_0$ et $\varphi[1/x] \equiv \psi_1$. Il suffit alors d'écrire que $\varphi \equiv x \rightarrow \psi_1, \psi_0$. L'hypothèse de récurrence permet d'assurer que $\psi_1$ et $\psi_0$ ne sont écrites qu'à l'aide de formules INF et de constantes. La formule que nous venons de construire respecte aussi cette propriété. D'où on déduit l'hérédité.
 		
+		On veut montrer que toute formule est équivalente à une formule INF.
+		Procédons par induction.
+		(Suivant la remarque préliminaire établie en introduction, on confondra les formules INF et leurs BDD associés.)
+		
+		\emph{Remarque} :  Dans cette démonstration, lorsqu'on traitera le cas des connecteurs binaires, on sera amené à remplacer des feuilles d'une formule INF ${f'}_1$ par une deuxième formule INF ${f'}_2$ (le tout pour former une formule INF $\varphi'$).
+		Notons que nous devons toutefois procéder à des simplifications : si ${f'}_2$ contient une formule INF $F = x \rightarrow F_1,F_0$, et que $x$ est également présente dans ${f'}_1$, alors dans le diagramme de $\varphi'$, il faut s'assurer qu'on ne teste pas $x$ deux fois sur le même chemin. Donc dans une branche qui se trouve sur le fils faible de $x$ dans ${f'}_1$, si un noeud $x$ réapparaît plus loin, on supprime ce deuxième noeud $x$ ainsi que son fils fort $F_1$, et on le remplace par son fils faible $F_0$ (et symétriquement si on est sur une branche sur le fils fort de $x$ dans ${f'}_1$). On sous-entendra ces suppressions de noeuds par la suite.
+		
+		\begin{itemize}
+		\item Si notre formule $\varphi$ est réduite à une variable $x$, sans utilisation d'opérateurs, alors $\varphi$ est équivalente à la formule INF $x \rightarrow 1,0$.
+		\item Si la formule $\varphi$ s'écrit $\neg f$ et qu'on suppose que $f$ est équivalente à une formule INF $f'$, alors $\varphi$ est équivalente à la formule INF $\varphi'$ obtenue en transformant, dans le BDD correspondant à $f'$, les feuilles $0$ en $1$ et les feuilles $1$ en $0$. Ainsi, $\varphi$ est vraie si et seulement si $f$ est fausse, si et seulement si $f'$ est fausse, si et seulement si $\varphi'$ est vraie. 
+		\item Si $\varphi$ s'écrit $f_1 \wedge f_2$ et qu'on suppose que $f_1$ et $f_2$ sont toutes les deux équivalentes à des formules INF ${f'}_1$ et ${f'}_2$, alors on peut construire une formule INF $\varphi'$ équivalente à $\varphi$ à partir de ${f'}_1$ ; il suffit, dans le BDD correspondant à ${f'}_1$, de remplacer les feuilles $1$ par le BDD complet de ${f'}_2$.
+		
+		Ainsi, si on parcourt $\varphi'$ avec une valuation telle que ${f'}_1$ soit fausse, on tombe sur $0$, donc $\varphi'$ est fausse. Et si on la parcourt avec une valuation qui rende ${f'}_1$ vraie, alors $\varphi'$ a la même valeur que ${f'}_2$. Donc $\varphi'$ est vraie si et seulement si ${f'}_1$ et ${f'}_2$ sont vraies. Donc $\varphi'$ est bien équivalente à $\varphi$.
+		\item Si $\varphi$ s'écrit $f_1 \vee f_2$ et qu'on suppose que $f_1$ et $f_2$ sont toutes les deux équivalentes à des formules INF ${f'}_1$ et ${f'}_2$, on procède de la même manière qu'avant en construisant une formule $\varphi'$ à partir de ${f'}_1$, mais cette fois, on remplace ses feuilles $0$ par la formule INF de ${f'}_2$.
+		
+		Ainsi, si on choisit une valuation qui rende ${f'}_1$ est vraie, le parcours dans $\varphi'$ avec cette valuation nous amène à un noeud 1, donc est $\varphi'$ est vraie. Sinon, $\varphi'$ a la valeur de ${f'}_2$. Donc $\varphi'$ est vraie si et seulement si au moins l'une des deux formules entre ${f'}_1$ et ${f'}_2$ est vraie.
+		Donc $\varphi'$ est équivalente à $\varphi$.
+		\item Si $\varphi$ s'écrit $f_1 \Rightarrow f_2$ et qu'on suppose que $f_1$ et $f_2$ sont toutes les deux équivalentes à des formules INF ${f'}_1$ et ${f'}_2$, on procède de la même manière qu'avant en construisant une formule $\varphi'$ à partir de ${f'}_1$ ; mais cette fois, on change les feuilles $0$ de ${f'}_1$ en $1$, et on remplace ses feuilles $1$ par ${f'}_2$.
+		
+		Ainsi, une valuation qui rend ${f'}_1$ fausse nous amène sur la valeur $1$ dans $\varphi'$, donc $\varphi'$ est vraie. Et une valuation qui rend ${f'}_1$ vraie nous amène à tester la valeur de ${f'}_2$, qui est celle que prendra $\varphi'$. Donc $\varphi'$ est fausse si et seulement si ${f'}_1$ est vraie et ${f'}_2$ fausse. D'où l'équivalence de $\varphi'$ et $\varphi$.
+		\item Si $\varphi$ s'écrit $f_1 \Leftrightarrow f_2$ et qu'on suppose que $f_1$ et $f_2$ sont toutes les deux équivalentes à des formules INF ${f'}_1$ et ${f'}_2$, on procède de la même manière qu'avant en construisant une formule $\varphi'$ à partir de ${f'}_1$ : on remplace les feuilles $1$ de ${f'}_1$ par la formule ${f'}_2$, et on remplace les feuilles $0$ de ${f'}_1$ par la formule ${f'}_2$ en prenant soin d'échanger les valeurs $1$ et $0$ sur les feuilles de cette dernière.
+		On peut ainsi vérifier que $\varphi'$ est équivalente à $\varphi$.
+ 		\end{itemize}
+	
 		\paragraph{Question 3} On peut procéder par récurrence sur $n$.
 		Soit donc la propriété $P(n)$ : "pour un ordre sur les variables $x_1 < ... < x_n$ donné, pour toute fonction booléenne $f : \mathbb{B}^n \rightarrow \mathbb{B}$, il existe un unique ROBDD $u$ tel que $f^u = f$."
 		
