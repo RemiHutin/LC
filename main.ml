@@ -55,7 +55,7 @@ let apply_neg t ht u =
 (* apply : tableT -> tableH -> op -> id -> id -> id 
  *
  * This function applies a logical operation to 2 BDD and
- * returns a new BBD.
+ * returns a new BDD.
  * Dynamic programming with hash table is used to
  * improve performances.
  *) 
@@ -301,7 +301,7 @@ let svg_of_board board n filename =
 Random.self_init ();
 
 let taille = 100 in
-let n = 12 in
+let n = 10 in
 let t = init_t taille in
 let ht = init_ht taille in
 
