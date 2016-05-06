@@ -6,7 +6,11 @@ open Prop
 open Bdd
 
 
-
+(* make : tableT -> tableH -> variable -> id -> id -> id 
+ *
+ * This function creates a new node.
+ * Utility and uniqueness conditions are respected.
+ *) 
 let make t ht i l h = 
     if member ht i l h then
         lookup ht i l h
@@ -18,27 +22,37 @@ let make t ht i l h =
     ;;
     
     
+(* apply_neg : tableT -> tableH -> id -> id
+ *
+ * This function computes the negation of a BBD.
+ *) 
 let apply_neg t ht u = 
     let tab = Hashtbl.create 100 in
     let rec aux u =
-        try 
-            let r = Hashtbl.find tab u in
-            print_string "Goog";
-            print_newline();
-            r;
-        with
-        Not_found ->
-            let r =
             match u with
             | u when isZero u -> one
             | u when isOne u -> zero
-            | u ->  make t ht (var t u) (aux (low t u)) (aux (high t u))
-            in
-            Hashtbl.add tab u r; r
+            | u ->
+                try 
+                    let r = Hashtbl.find tab ((var t u), (low t u), (high t u)) in
+                    print_string "";
+                    r;
+                with
+                Not_found ->            
+                    print_string "";
+                    
+                    let r = make t ht (var t u) (aux (low t u)) (aux (high t u))
+                    in
+                    Hashtbl.add tab ((var t u), (low t u), (high t u)) r; r
         
     in aux u;;
     
     
+(* apply : tableT -> tableH -> op -> id -> id -> id 
+ *
+ * This function applies a logical operation to 2 BDD and
+ * returns a new BBD.
+ *) 
 let rec apply t ht op u1 u2 = 
     let rec aux op u1 u2 =
         match op, u1, u2 with
@@ -57,22 +71,45 @@ let rec apply t ht op u1 u2 =
     aux op u1 u2;;
 
 
+(* build : tableT -> tableH -> prop formula -> id
+ *
+ * This function builds a new ROBBD from a prop formula.
+ *) 
 let rec build t ht f =
     match f with
     | False        -> zero
     | True         -> one
     | Atom (P x)   -> make t ht x zero one
     | Not f1       -> apply_neg t ht (build t ht f1)
-    | And (f1, f2) -> apply t ht Et (build t ht f1) (build t ht f2)
-    | Or  (f1, f2) -> apply t ht Ou (build t ht f1) (build t ht f2)
-    | Imp (f1, f2) -> apply t ht Impl (build t ht f1) (build t ht f2)
-    | Iff (f1, f2) -> apply t ht Equiv (build t ht f1) (build t ht f2)
+    | And (f1, f2) -> print_string "And---\n"; apply t ht Et (build t ht f1) (build t ht f2)
+    | Or  (f1, f2) -> print_string "Or---\n"; apply t ht Ou (build t ht f1) (build t ht f2)
+    | Imp (f1, f2) -> print_string "Imp---\n"; apply t ht Impl (build t ht f1) (build t ht f2)
+    | Iff (f1, f2) -> print_string "Iff---\n"; apply t ht Equiv (build t ht f1) (build t ht f2)
     ;;
 
     
-let sat t i = not (isZero i);;
-let valid t = isOne;;
+(* sat : id -> bool 
+ *
+ * This function returns true if the ROBDD is satisfiable 
+ * (ie not reduced to zero) and false otherwise.
+ *)
+let sat i = not (isZero i);;
 
+
+(* valid : id -> bool 
+ *
+ * This function returns true if the ROBDD is valid 
+ * (ie reduced to one) and false otherwise.
+ *)
+let valid = isOne;;
+
+
+(* anysat : tableT -> id -> (variable * bool) list
+ *
+ * If the BDD is satisfiable, this function returns a 
+ * valuation satisfying the corresponding boolean function.
+ * An empty list is returned otherwise.
+ *)
 let anysat t i =
     let rec aux i acc =
         match i with
@@ -82,11 +119,37 @@ let anysat t i =
                if w <> [] then w 
                else aux (high t i) (((var t i), true)::acc);
     in aux i [];;
+
+(* anysat_rand : tableT -> id -> (variable * bool) list
+ *
+ * If the BDD is satisfiable, this function returns a random
+ * valuation satisfying the corresponding boolean function.
+ * An empty list is returned otherwise.
+ *)
+let anysat_rand t i =
+    let rec aux i acc =
+        match i with
+        | i when isZero i -> []
+        | i when isOne i -> acc
+        | i ->  if Random.int 2 = 0 then
+                    let w = aux (low t i) (((var t i), false)::acc) in 
+                    if w <> [] then w 
+                    else aux (high t i) (((var t i), true)::acc);
+                else
+                    let w = aux (high t i) (((var t i), true)::acc) in 
+                    if w <> [] then w 
+                    else aux (low t i) (((var t i), false)::acc);
+    in aux i [];;
                 
                 
 
 
 
+(* dames : int -> prop formula 
+ *
+ * This function build a prop formula, corresponding
+ * to the problem of n queens.
+ *)
 let dames n =
     let row i k = Atom (P (i*n + k)) in
     let col i k = Atom (P (k*n + i)) in
@@ -112,32 +175,16 @@ let dames n =
             | i -> And (series (i-1), serie size_serie)
         in series nb_series
     in
-    print_string "building formula";
-    print_newline();
-    
-    let f = And (And (And (cond row n n false, cond col n n false), cond diag1 (2*n-1) n true), cond diag2 (2*n-1) n true) in
-    
-    print_string "building BDD";
-    print_newline();
-    f;;
-        
-    
-    
+    And (And (And (cond row n n false, cond col n n false), cond diag1 (2*n-1) n true), cond diag2 (2*n-1) n true);;
         
 
     
-let rec print_list l =
-    match l with
-    | [] -> ();
-    | (p, b)::q ->  print_int p; 
-                    if b then 
-                        (print_string " True") 
-                    else 
-                        (print_string " False"); 
-                    print_newline(); 
-                    print_list q;;
 
-                    
+             
+(* board_of_list : (variable * bool) list -> int -> bool array
+ *
+ * This function converts a valuation to a chess board.
+ *)       
 let board_of_list l n =
     let board = Array.make (n*n) false
     in
@@ -148,7 +195,11 @@ let board_of_list l n =
     in
     fill l;
     board;;
-                    
+               
+(* print_board : bool array -> int -> unit
+ *
+ * This prints a chess board.
+ *)            
 let print_board board n =
     for i=0 to (n*n-1) do
         if (i mod n = 0) then print_newline();
@@ -157,6 +208,10 @@ let print_board board n =
     print_newline();;
     
 (* https://commons.wikimedia.org/wiki/Category:SVG_chess_pieces *)
+(* svg_of_board : bool array -> int -> string -> unit
+ *
+ * This saves a chess board to a pretty svg file.
+ *)            
 let svg_of_board board n filename =
     let f = open_out filename in
     output_string f ("<?xml version='1.0' encoding='utf-8'?>
@@ -185,6 +240,8 @@ let svg_of_board board n filename =
     done;
     output_string f "</svg>";
     close_out f;
+    print_string ("Board saved to " ^ filename);
+    print_newline();
     ;;
     
 (* Pretty-printer for formulas, to be used with compiled mode *)
@@ -199,16 +256,23 @@ print_formula f;;
 Random.self_init ();
 
 let taille = 100 in
-let n = 8 in
+let n = 6 in
 let t = init_t taille in
 let ht = init_ht taille in
+
+print_string "building formula";
+print_newline();
 let f = (dames n) in
+    
+print_string "building BDD";
+print_newline();
 let buildt = build t ht in
 let u = time buildt f in 
-    print_string "solving";
-    print_newline();
-    print_t t u "graph.dot";
-    let sol = anysat t u in
-    let board = board_of_list sol n in
-    print_board board n;
-    svg_of_board board n "board3.svg";;
+print_t t u "graph.dot";
+
+print_string "solving";
+print_newline();
+let sol = anysat_rand t u in
+let board = board_of_list sol n in
+print_board board n;
+svg_of_board board n "board.svg";;
