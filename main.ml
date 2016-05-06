@@ -182,7 +182,7 @@ let anysat_rand t i =
  *)
 let dames n =
 
-    (* int -> int -> prop formula
+    (* int -> prop formula
      *
      * f i k (for f = row/col/...) must return the variable of the k-th cell of the i-th serie (i.e row/column...). 
      *)
