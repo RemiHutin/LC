@@ -6,6 +6,13 @@ open Prop
 open Bdd
 
 
+
+    
+(* Pretty-printer for formulas, to be used with compiled mode *)
+let print_formula fm = print_prop_formula fm; print_newline();;
+
+
+
 (* make : tableT -> tableH -> variable -> id -> id -> id 
  *
  * This function creates a new node.
@@ -25,26 +32,23 @@ let make t ht i l h =
 (* apply_neg : tableT -> tableH -> id -> id
  *
  * This function computes the negation of a BBD.
+ * Dynamic programming with hash table is used to
+ * improve performances.
  *) 
 let apply_neg t ht u = 
     let tab = Hashtbl.create 100 in
     let rec aux u =
-            match u with
-            | u when isZero u -> one
-            | u when isOne u -> zero
-            | u ->
-                try 
-                    let r = Hashtbl.find tab ((var t u), (low t u), (high t u)) in
-                    print_string "";
-                    r;
-                with
-                Not_found ->            
-                    print_string "";
-                    
-                    let r = make t ht (var t u) (aux (low t u)) (aux (high t u))
-                    in
-                    Hashtbl.add tab ((var t u), (low t u), (high t u)) r; r
-        
+        match u with
+        | u when isZero u -> one
+        | u when isOne u -> zero
+        | u ->
+            try 
+                Hashtbl.find tab u
+            with
+            Not_found ->        
+                let r = make t ht (var t u) (aux (low t u)) (aux (high t u))
+                in
+                Hashtbl.add tab u r; r
     in aux u;;
     
     
@@ -52,8 +56,11 @@ let apply_neg t ht u =
  *
  * This function applies a logical operation to 2 BDD and
  * returns a new BBD.
+ * Dynamic programming with hash table is used to
+ * improve performances.
  *) 
 let rec apply t ht op u1 u2 = 
+    let tab = Hashtbl.create 100 in
     let rec aux op u1 u2 =
         match op, u1, u2 with
         | Ou,    u1, _ when isZero u1 -> u2
@@ -64,28 +71,51 @@ let rec apply t ht op u1 u2 =
         | Impl,  u1, _ when isOne u1  -> u2
         | Equiv, u1, _ when isZero u1 -> apply_neg t ht u2
         | Equiv, u1, _ when isOne u1  -> u2
-        | _, u1, u2 when var t u1 = var t u2 -> make t ht (var t u1) (aux op (low t u1) (low t u2)) (aux op (high t u1) (high t u2))
-        | _, u1, u2 when var t u1 < var t u2 -> make t ht (var t u1) (aux op (low t u1) u2) (aux op (high t u1) u2)
-        | _, u1, u2                          -> make t ht (var t u2) (aux op (low t u2) u1) (aux op (high t u2) u1)
-    in
-    aux op u1 u2;;
+        | _, _, _ ->   
+            try 
+                Hashtbl.find tab (op, u1, u2) 
+            with
+            Not_found ->
+                let v1 = var t u1 in
+                let v2 = var t u2 in
+                let r =
+                    if v1 = v2 then
+                        make t ht v1 (aux op (low t u1) (low t u2)) (aux op (high t u1) (high t u2))
+                    else if v1 < v2 then
+                        make t ht v1 (aux op (low t u1) u2) (aux op (high t u1) u2)
+                    else
+                        make t ht v2 (aux op (low t u2) u1) (aux op (high t u2) u1)
+                in
+                Hashtbl.add tab (op, u1, u2) r; r
+    in aux op u1 u2;;
 
 
 (* build : tableT -> tableH -> prop formula -> id
  *
  * This function builds a new ROBBD from a prop formula.
+ * Dynamic programming with hash table is used to
+ * improve performances.
  *) 
 let rec build t ht f =
-    match f with
-    | False        -> zero
-    | True         -> one
-    | Atom (P x)   -> make t ht x zero one
-    | Not f1       -> apply_neg t ht (build t ht f1)
-    | And (f1, f2) -> print_string "And---\n"; apply t ht Et (build t ht f1) (build t ht f2)
-    | Or  (f1, f2) -> print_string "Or---\n"; apply t ht Ou (build t ht f1) (build t ht f2)
-    | Imp (f1, f2) -> print_string "Imp---\n"; apply t ht Impl (build t ht f1) (build t ht f2)
-    | Iff (f1, f2) -> print_string "Iff---\n"; apply t ht Equiv (build t ht f1) (build t ht f2)
-    ;;
+    let tab = Hashtbl.create 1000 in
+        let rec aux f = 
+            try 
+                Hashtbl.find tab f
+            with
+            Not_found ->
+            let r =
+                match f with
+                | False        -> zero
+                | True         -> one
+                | Atom (P x)   -> make t ht x zero one
+                | Not f1       -> apply_neg t ht (aux f1)
+                | And (f1, f2) -> apply t ht Et (aux f1) (aux f2)
+                | Or  (f1, f2) -> apply t ht Ou (aux f1) (aux f2)
+                | Imp (f1, f2) -> apply t ht Impl (aux f1) (aux f2)
+                | Iff (f1, f2) -> apply t ht Equiv (aux f1) (aux f2)
+            in
+                Hashtbl.add tab f r; r
+    in aux f;;
 
     
 (* sat : id -> bool 
@@ -151,11 +181,28 @@ let anysat_rand t i =
  * to the problem of n queens.
  *)
 let dames n =
+
+    (* int -> int -> prop formula
+     *
+     * f i k (for f = row/col/...) must return the variable of the k-th cell of the i-th serie (i.e row/column...). 
+     *)
     let row i k = Atom (P (i*n + k)) in
     let col i k = Atom (P (k*n + i)) in
     let diag1 i k = if i+k >= n-1 && i+k < 2*n-1 then Atom (P (k*(n+1) + i - (n-1))) else False in
     let diag2 i k = if i-k >= 0 && i-k < n then Atom (P (k*(n-1) + i)) else False in
     
+    
+    (* cond : (int -> int -> prop formula) -> int -> int -> bool -> prop formula
+     * 
+     * "cond f nb_series size_serie opt" builds the prop formula of series (i.e. rows, a columns, a diagonals...)
+     * if opt is true, a proposition with the negation of every variable will be added (for diagonals)
+     *
+     * ex : cond row 3 3 false will create :
+     *
+     * ((x0 ^ ~x1 ^ ~x2) v (~x0 ^ x1 ^ ~x2) v (~x0 ^ ~x1 ^ x2)) ^
+     * ((x3 ^ ~x4 ^ ~x5) v (~x3 ^ x4 ^ ~x5) v (~x3 ^ ~x4 ^ x5)) ^
+     * ((x6 ^ ~x7 ^ ~x8) v (~x6 ^ x7 ^ ~x8) v (~x6 ^ ~x7 ^ x8)) 
+     *)
     let cond f nb_series size_serie opt =
         let rec series i = 
             let rec serie j =
@@ -207,10 +254,13 @@ let print_board board n =
     done;
     print_newline();;
     
-(* https://commons.wikimedia.org/wiki/Category:SVG_chess_pieces *)
+    
+    
 (* svg_of_board : bool array -> int -> string -> unit
  *
  * This saves a chess board to a pretty svg file.
+ *
+ * https://commons.wikimedia.org/wiki/Category:SVG_chess_pieces
  *)            
 let svg_of_board board n filename =
     let f = open_out filename in
@@ -244,19 +294,14 @@ let svg_of_board board n filename =
     print_newline();
     ;;
     
-(* Pretty-printer for formulas, to be used with compiled mode *)
-let print_formula fm = print_prop_formula fm; print_newline();;
-
-let f = << ( 1 /\ 2 ) <=> (2 /\ 3) <=> (1 /\ 3) >>;;
-print_formula f;;
-
+    
 
 
 
 Random.self_init ();
 
 let taille = 100 in
-let n = 6 in
+let n = 8 in
 let t = init_t taille in
 let ht = init_ht taille in
 
@@ -266,9 +311,7 @@ let f = (dames n) in
     
 print_string "building BDD";
 print_newline();
-let buildt = build t ht in
-let u = time buildt f in 
-print_t t u "graph.dot";
+let u = time (build t ht) f in 
 
 print_string "solving";
 print_newline();
