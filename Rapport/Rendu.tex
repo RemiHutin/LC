@@ -59,4 +59,21 @@
 		On peut alors utiliser la question précédente pour écrire que $\varphi \equiv \varphi\uparrow^{x} = x \rightarrow \varphi[1/x],\varphi[0/x]$.
 		
 		Si on se donne maintenant $n \in \mathbb{N}$ et qu'on suppose que toute formule à $n$ variables est équivalente à une formule INF, alors soit $\varphi$ une formule à $n+1$ variables. Soit $x$ une des variables de $\varphi$, choisie arbitrairement. Remarquons que $\varphi[0/x]$ et $\varphi[1/x]$ sont des formules à $n$ variables. On peut donc leur appliquer l'hypothèse de récurrence. Alors il existe des formules INF $\psi_0$ et $\psi_1$ telles que $\varphi[0/x] \equiv \psi_0$ et $\varphi[1/x] \equiv \psi_1$. Il suffit alors d'écrire que $\varphi \equiv x \rightarrow \psi_1, \psi_0$. L'hypothèse de récurrence permet d'assurer que $\psi_1$ et $\psi_0$ ne sont écrites qu'à l'aide de formules INF et de constantes. La formule que nous venons de construire respecte aussi cette propriété. D'où on déduit l'hérédité.
+		
+		\paragraph{Question 3} On peut procéder par récurrence sur $n$.
+		Soit donc la propriété $P(n)$ : "pour un ordre sur les variables $x_1 < ... < x_n$ donné, pour toute fonction booléenne $f : \mathbb{B}^n \rightarrow \mathbb{B}$, il existe un unique ROBDD $u$ tel que $f^u = f$."
+		
+		\begin{itemize}
+		\item Montrons $P(1)$ : \newline
+		Si $f$ ne prend qu'une variable $x$, alors deux cas se présentent :
+			\begin{itemize} 
+			\item si $f(1) = f(0)$, alors le ROBDD ne contenant que le noeud de la constante $f(0)$ convient, et il n'existe pas d'autres ROBDD correspondant, puisqu'en respectant la propriété d'utilité, il n'y a aucun test à faire, donc le diagramme est nécessairement réduit à un seul noeud, qui ne peut avoir que la valeur de $f(0)$ \item $si f(1) \neq f(0)$, il suffit de construire le ROBDD correspondant à la formule INF $x \rightarrow f(1),f(0)$. L'unicité découle du fait qu'un seul test est nécessaire et qu'il ne peut pas avoir d'autres résultats.
+			\end{itemize}
+		\item Supposons $P(n)$ pour $n$ donné, et montrons $P(n+1)$ :
+		On se donne $n+1$ variables $x_1$ à $x_{n+1}$ et l'ordre $x_1 < ... < x_{n+1}$.
+		Soit $f$ une fonction booléenne à $n+1$ variables, notées $b_1$ à $b_{n+1}$. On considère les fonctions booléennes à $n$ variables $f_0$ et $f_1$ telles que $f_0(b_2,...,b_{n+1}) = f(0,b_2,...,b_{n+1})$ et $f_1(b_2,...,b_{n+1}) = f(1,b_2,...,b_{n+1})$.
+		
+		$f_0$ et $f_1$ sont des fonctions booléennes à $n$ variables, et  les variables $x_2$ à $x_{n+1}$ suivent l'ordre $x_2 < ... < _ x{n+1}$. Donc d'après $P(n)$, il existe un unique ROBDD $u_0$ tel que $f^{u_0} = f_0$, et de même il existe un unique ROBDD $u_1$ tel que $f^{u_1} = f$.
+		On peut donc construire un BDD pour $f$ en prenant $x_1$ pour racine, et en lui donnant pour fils faible la racine de $u_0$ et pour fils fort la racine de $u_1$. On peut vérifier avec les définitions de $f_0$ et $f_1$ que le BDD $u$ ainsi construit est tel que $f^u = f$. De plus, l'ordre donné sur les variables $x_1$ à $_{n+1}$ est respecté dans $u$, car il a pour racine $x_1$ et que chacun de ses fils est ordonné suivant $x_2 < ... < x_{n+1}$. On a donc un $OBDD$, qu'on peut réduire en fusionnant tous les noeuds qui auraient la même étiquette, le même fils fort et le même fils faible, et en supprimant les noeuds dont les deux fils sont égaux, et en supprimant tous les test inutiles (ceux-ci sont déjà a priori supprimés dans les ROBDD $u_0$ et $u_1$ ; il faudrait donc seulement supprimer la racine $x_1$ si son test est inutile). On a donc construit un $ROBDD$. L'unicité de celui-ci est imposée par l'ordre qu'on s'est donné : un tel $ROBDD$ doit forcément avoir $x_1$ pour racine ; et comme fils fort et fils faible, il doit avoir deux autres ROBDD associés respectivement à $f_1$ et $f_0$. Mais ceux-ci sont uniques, d'après la propriété $P(n)$. Il ne peut donc pas en exister d'autre non plus pour $f$. On a donc démontré $P(n+1)$.
+		\end{itemize}
 \end{document}
