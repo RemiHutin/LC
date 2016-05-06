@@ -103,4 +103,47 @@
 		$f_0$ et $f_1$ sont des fonctions booléennes à $n$ variables, et  les variables $x_2$ à $x_{n+1}$ suivent l'ordre $x_2 < ... < _ x{n+1}$. Donc d'après $P(n)$, il existe un unique ROBDD $u_0$ tel que $f^{u_0} = f_0$, et de même il existe un unique ROBDD $u_1$ tel que $f^{u_1} = f$.
 		On peut donc construire un BDD pour $f$ en prenant $x_1$ pour racine, et en lui donnant pour fils faible la racine de $u_0$ et pour fils fort la racine de $u_1$. On peut vérifier avec les définitions de $f_0$ et $f_1$ que le BDD $u$ ainsi construit est tel que $f^u = f$. De plus, l'ordre donné sur les variables $x_1$ à $_{n+1}$ est respecté dans $u$, car il a pour racine $x_1$ et que chacun de ses fils est ordonné suivant $x_2 < ... < x_{n+1}$. On a donc un $OBDD$, qu'on peut réduire en fusionnant tous les noeuds qui auraient la même étiquette, le même fils fort et le même fils faible, et en supprimant les noeuds dont les deux fils sont égaux, et en supprimant tous les test inutiles (ceux-ci sont déjà a priori supprimés dans les ROBDD $u_0$ et $u_1$ ; il faudrait donc seulement supprimer la racine $x_1$ si son test est inutile). On a donc construit un $ROBDD$. L'unicité de celui-ci est imposée par l'ordre qu'on s'est donné : un tel $ROBDD$ doit forcément avoir $x_1$ pour racine ; et comme fils fort et fils faible, il doit avoir deux autres ROBDD associés respectivement à $f_1$ et $f_0$. Mais ceux-ci sont uniques, d'après la propriété $P(n)$. Il ne peut donc pas en exister d'autre non plus pour $f$. On a donc démontré $P(n+1)$.
 		\end{itemize}
+		
+		
+	\section{Implémentation de ROBDD}
+	
+	Nous avons réussi à implémenter l'ensemble de fonctions demandées, en particulier l'extension des $n$ dames et les résultats que nous obtenons semblent cohérents.
+	
+	Pour le problème des $n$ dames, nous avons créé la fonction \texttt{dames : int -> prop formula}, qui génère la formule modélisant le problème pour une taille donnée. L'idée intuitive pour modéliser le problème est qu'il doit y avoir exactement $1$ dame présente dans chaque ligne et chaque colonne de l'échiquier, et qu'il doit y avoir au plus $1$ dame présente dans chaque diagonale. 
+	
+	Notre fonction traduit donc cette idée en formule logique. On commence donc par associer à chaque case une variable logique. Par exemple, nous $n = 4$ :
+	
+	\begin{center}
+	\begin{tabular}{|*{4}{c|}}
+	
+            \hline
+            $x_0$ & $x_1$ & $x_2$ & $x_3$ \\
+            \hline
+            $x_4$ & $x_5$ & $x_6$ & $x_7$ \\
+            \hline
+            $x_8$ & $x_9$ & $x_{10}$ & $x_{11}$ \\
+            \hline
+            $x_{12}$ & $x_{13}$ & $x_{14}$ & $x_{15}$ \\
+            \hline
+        \end{tabular}
+        \end{center}
+        
+        Puis, notre fonction va générer les formules correspondantes. Par exemple, pour la première ligne, la formule générée est :
+        
+        $$(x_0 \land \neg x_1 \land \neg x_2 \land \neg x_3) \lor (\neg x_0 \land x_1 \land \neg x_2 \land \neg x_3) \lor (\neg x_0 \land \neg x_1 \land x_2 \land \neg x_3) \lor (\neg x_0 \land \neg x_1 \land \neg x_2 \land x_3)$$
+        
+        Ainsi de suite pour toutes les lignes, colonnes et diagonales. Cette formule est ensuite traduite en ROBDD par la fonction \texttt{build}, et une solution est trouvée par la fonction \texttt{anysat}.
+	
+	Dans un premier temps, nous avons implémenté les fonctions sans utiliser la programmation dynamique. Les résultats étaients corrects, mais les performances
+	étaient assez faibles (nous n'avons pu résoudre le problème des $n$ dames que pour $n \leq 6$).
+        Ensuite, nous avons utilisé la programmation dynamique avec des tables de hachages, dans le but d'éviter de faire plusieurs fois les mêmes calculs. Nous avons pu observer une très nette amélioration des performances, et avons pu résoudre le problème pour $n = 12$ en un temps correct, comme le montre la Figure 1.
+        
+        
+        \begin{figure}
+        \centering
+        \includegraphics[scale=0.3]{board.png}
+        \caption{Une solution au problème des $12$ dames}
+        \end{figure}
+	
+	
 \end{document}

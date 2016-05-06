@@ -301,7 +301,7 @@ let svg_of_board board n filename =
 Random.self_init ();
 
 let taille = 100 in
-let n = 8 in
+let n = 12 in
 let t = init_t taille in
 let ht = init_ht taille in
 
